@@ -273,10 +273,6 @@ app.use('/api/v:version*', (req, res, next) => {
   }
 });
 
-// Global error handler
-app.use((err, req, res, next) => {
-  logger.error('Unhandled error:', { error: err.message, stack: err.stack, requestId: req.requestId });
-
 // Global error handler - must be last
 app.use(errorHandler);
 

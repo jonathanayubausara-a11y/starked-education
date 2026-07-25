@@ -8,9 +8,8 @@ import toast from 'react-hot-toast';
 import { getShortcuts, getEnabledKeys, setEnabledKeys, type Shortcut } from '@/lib/shortcutRegistry';
 
 export default function NotificationSettingsPage() {
-    // Using a hardcoded userId for demo purposes. 
-    // In a real app, this would come from an auth context.
-    const { preferences, updatePreferences, isLoading, subscribeToPushNotifications } = useNotifications('user-123');
+    // User identity is obtained from the JWT auth token by the backend.
+    const { preferences, updatePreferences, isLoading, subscribeToPushNotifications } = useNotifications();
     const [shortcutsEnabled, setShortcutsEnabled] = useState(getEnabledKeys());
     const [shortcuts] = useState<Shortcut[]>(getShortcuts());
 

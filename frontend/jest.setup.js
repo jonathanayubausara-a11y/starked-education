@@ -110,3 +110,6 @@ global.performance = {
   measure: jest.fn(),
   now: jest.fn(() => Date.now()),
 }
+
+// Polyfill scrollIntoView (not implemented in JSDOM)
+Element.prototype.scrollIntoView = jest.fn()

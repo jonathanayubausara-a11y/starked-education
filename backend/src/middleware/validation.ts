@@ -908,19 +908,11 @@ export const markAsReadSchema: ValidationSchema = {
 };
 
 export const markAllAsReadSchema: ValidationSchema = {
-  body: Joi.object({
-    userId: Joi.string()
-      .trim()
-      .min(1)
-      .required()
-      .messages({ "any.required": '"userId" is required' }),
-  }),
+  // userId is obtained from the authenticated request (req.user.id)
 };
 
 export const updatePreferencesSchema: ValidationSchema = {
-  params: Joi.object({
-    userId: Joi.string().trim().min(1).required(),
-  }),
+  // userId is obtained from the authenticated request (req.user.id)
   body: Joi.object({
     emailNotifications: Joi.boolean().optional(),
     pushNotifications: Joi.boolean().optional(),
@@ -934,21 +926,24 @@ export const updatePreferencesSchema: ValidationSchema = {
       .optional(),
   })
     .min(1)
+    .unknown(false)
     .messages({
       "object.min": "At least one preference field must be provided",
     }),
 };
 
 export const getNotificationsSchema: ValidationSchema = {
-  params: Joi.object({
-    userId: Joi.string().trim().min(1).required(),
-  }),
+  // userId is obtained from the authenticated request (req.user.id)
   query: Joi.object({
     page: Joi.number().integer().min(1).optional(),
     limit: Joi.number().integer().min(1).max(100).optional(),
     unreadOnly: Joi.boolean().optional(),
     type: Joi.string().optional(),
   }),
+};
+
+export const getNotificationPreferencesSchema: ValidationSchema = {
+  // userId is obtained from the authenticated request (req.user.id)
 };
 
 export const deleteNotificationSchema: ValidationSchema = {

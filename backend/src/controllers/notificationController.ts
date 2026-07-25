@@ -1,11 +1,12 @@
-import { Request, Response } from "express";
+import { Response } from "express";
+import { AuthenticatedRequest } from "../middleware/auth";
 import { notificationService } from "../services/notificationService";
 import logger from "../utils/logger";
 
 export class NotificationController {
-  public async getNotifications(req: Request, res: Response): Promise<void> {
+  public async getNotifications(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { userId } = req.params;
+      const userId = req.user.id;
       const { category, isRead, priority, limit, skip } = req.query;
 
       const result = await notificationService.getNotifications({
@@ -30,10 +31,10 @@ export class NotificationController {
     }
   }
 
-  public async markAsRead(req: Request, res: Response): Promise<void> {
+  public async markAsRead(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { notificationId } = req.params;
-      const { userId } = req.body; // In a real app, get from auth middleware
+      const userId = req.user.id;
 
       const success = await notificationService.markAsRead(
         notificationId,
@@ -48,9 +49,9 @@ export class NotificationController {
     }
   }
 
-  public async markAllAsRead(req: Request, res: Response): Promise<void> {
+  public async markAllAsRead(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { userId } = req.body;
+      const userId = req.user.id;
       const count = await notificationService.markAllAsRead(userId);
       res.status(200).json({ success: true, count });
     } catch (error) {
@@ -61,9 +62,9 @@ export class NotificationController {
     }
   }
 
-  public async getPreferences(req: Request, res: Response): Promise<void> {
+  public async getPreferences(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { userId } = req.params;
+      const userId = req.user.id;
       const preferences = await notificationService.getUserPreferences(userId);
       res.status(200).json({ success: true, data: preferences });
     } catch (error) {
@@ -74,9 +75,9 @@ export class NotificationController {
     }
   }
 
-  public async updatePreferences(req: Request, res: Response): Promise<void> {
+  public async updatePreferences(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { userId } = req.params;
+      const userId = req.user.id;
       const preferences = req.body;
 
       await notificationService.setNotificationPreferences(userId, preferences);
@@ -89,14 +90,14 @@ export class NotificationController {
     }
   }
 
-  public async deleteNotification(req: Request, res: Response): Promise<void> {
+  public async deleteNotification(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { notificationId } = req.params;
-      const { userId } = req.query;
+      const userId = req.user.id;
 
       const success = await notificationService.deleteNotification(
         notificationId,
-        userId as string,
+        userId,
       );
       res.status(200).json({ success });
     } catch (error) {

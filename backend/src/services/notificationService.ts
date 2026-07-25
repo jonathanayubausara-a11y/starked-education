@@ -123,6 +123,18 @@ class NotificationService {
 
       const deliveryPromises: Promise<void>[] = [];
 
+      // Validate actionUrl to prevent open redirects
+      if (notification.actionUrl) {
+        try {
+          const url = new URL(notification.actionUrl);
+          if (!['http:', 'https:'].includes(url.protocol)) {
+            notification.actionUrl = undefined;
+          }
+        } catch {
+          notification.actionUrl = undefined;
+        }
+      }
+
       // Deliver via each specified method
       if (preferences.deliveryMethods.includes("websocket")) {
         // Deliver via websocket if user is online
@@ -189,7 +201,7 @@ class NotificationService {
         html: `<p>${notification.message}</p>`,
       });
       logger.info(
-        `Email sent to ${userEmail} for notification ${notification._id}`,
+        `Email sent to ${userEmail.replace(/(.{3}).*(@.*)/, '$1***$2')} for notification ${notification._id}`,
       );
     } catch (error) {
       logger.error(
@@ -250,7 +262,9 @@ class NotificationService {
         from: process.env.TWILIO_PHONE_NUMBER,
         to: userPhone,
       });
-      logger.info(`SMS sent to ${userPhone} for user ${notification.userId}`);
+      // Log masked phone number to avoid PII exposure
+      const maskedPhone = userPhone.slice(-4).padStart(userPhone.length, '*');
+      logger.info(`SMS sent to ${maskedPhone} for user ${notification.userId}`);
     } catch (error) {
       logger.error(`Error sending SMS for user ${notification.userId}:`, error);
     }

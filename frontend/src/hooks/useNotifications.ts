@@ -62,12 +62,12 @@ export const useNotifications = (userId?: string) => {
 
   // Fetch notifications and preferences from backend
   const fetchData = useCallback(async () => {
-    if (!userId) return;
+    // userId is no longer required in URLs — backend authenticates via JWT token
     setIsLoading(true);
     try {
       const [notifsRes, prefsRes] = await Promise.all([
-        fetch(`/api/notifications/${userId}`),
-        fetch(`/api/notifications/${userId}/preferences`),
+        fetch('/api/notifications/'),
+        fetch('/api/notifications/preferences'),
       ]);
 
       if (notifsRes.ok) {
@@ -90,7 +90,7 @@ export const useNotifications = (userId?: string) => {
     } finally {
       setIsLoading(false);
     }
-  }, [userId]);
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -161,7 +161,6 @@ export const useNotifications = (userId?: string) => {
         const res = await fetch(`/api/notifications/${id}/read`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId }),
         });
 
         if (res.ok) {
@@ -177,15 +176,14 @@ export const useNotifications = (userId?: string) => {
         console.error('Failed to mark notification as read:', error);
       }
     },
-    [userId]
+    []
   );
 
   const markAllAsRead = useCallback(async () => {
     try {
-      const res = await fetch(`/api/notifications/read-all`, {
+      const res = await fetch('/api/notifications/read-all', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
       });
 
       if (res.ok) {
@@ -198,13 +196,15 @@ export const useNotifications = (userId?: string) => {
       }
     } catch (error) {
       console.error('Failed to mark all as read:', error);
-    }
-  }, [userId]);
+      }
+    },
+    []
+  );
 
   const removeNotification = useCallback(
     async (id: string) => {
       try {
-        const res = await fetch(`/api/notifications/${id}?userId=${userId}`, {
+        const res = await fetch(`/api/notifications/${id}`, {
           method: 'DELETE',
         });
 
@@ -217,7 +217,7 @@ export const useNotifications = (userId?: string) => {
         console.error('Failed to remove notification:', error);
       }
     },
-    [userId]
+    []
   );
 
   const clearAllNotifications = useCallback(async () => {
@@ -226,7 +226,7 @@ export const useNotifications = (userId?: string) => {
     setNotifications([]);
     // Optionally, send a request to the backend to clear all for the user
     // try {
-    //   await fetch(`/api/notifications/clear-all?userId=${userId}`, { method: 'DELETE' });
+    //   await fetch('/api/notifications/clear-all', { method: 'DELETE' });
     // } catch (error) {
     //   console.error('Failed to clear all notifications on server:', error);
     // }
@@ -250,7 +250,7 @@ export const useNotifications = (userId?: string) => {
       setPreferences(updated);
 
       try {
-        await fetch(`/api/notifications/${userId}/preferences`, {
+        await fetch('/api/notifications/preferences', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updated),
@@ -259,7 +259,7 @@ export const useNotifications = (userId?: string) => {
         console.error('Failed to update preferences on server:', error);
       }
     },
-    [userId, preferences]
+    [preferences]
   );
 
   const filteredNotifications = notifications.filter(
