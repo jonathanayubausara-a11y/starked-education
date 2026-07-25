@@ -1,5 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { createServer } from 'http';
+import jwt from 'jsonwebtoken';
 import { INotification } from '../models/Notification';
 import collaborationService from './collaborationService';
 import { getSyncStatus } from './syncService'; // Hook into tracking system
@@ -43,8 +44,34 @@ class WebsocketService {
       // Instantly notify connection health state upon initial handshake
       socket.emit('connection-state-changed', { status: 'connected' });
 
-      socket.on('register-user', async (payload: { userId: string; lastOffset?: number }) => {
-        const { userId, lastOffset } = typeof payload === 'string' ? { userId: payload, lastOffset: 0 } : payload;
+      socket.on('register-user', async (payload: { userId: string; lastOffset?: number; token?: string }) => {
+        const { userId: claimedUserId, lastOffset, token } =
+          typeof payload === 'string' ? { userId: payload, lastOffset: 0, token: undefined } : payload;
+
+        // Authenticate the user via JWT token to prevent identity spoofing
+        if (!token) {
+          console.warn(`register-user rejected: no token provided for socket ${socket.id}`);
+          socket.emit('auth-error', { message: 'Authentication required' });
+          return;
+        }
+
+        let verifiedUserId: string;
+        try {
+          const jwtSecret = process.env.JWT_SECRET;
+          if (!jwtSecret) {
+            console.error('JWT_SECRET not configured');
+            return;
+          }
+          const decoded = jwt.verify(token, jwtSecret) as { id: string };
+          verifiedUserId = decoded.id;
+        } catch {
+          console.warn(`register-user rejected: invalid token for socket ${socket.id}`);
+          socket.emit('auth-error', { message: 'Invalid token' });
+          return;
+        }
+
+        // Use the verified userId from the JWT, not the client-supplied one
+        const userId = verifiedUserId;
         
         this.socketUsers[socket.id] = userId;
         this.addUserSocket(userId, socket);

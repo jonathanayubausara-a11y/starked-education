@@ -1,13 +1,15 @@
 import express, { Router } from "express";
 import { notificationController } from "../controllers/notificationController";
 import { authenticateToken } from "../middleware/auth";
+import { rateLimitMiddleware } from "../middleware/rateLimit";
 import { validateRequestSchema } from "../middleware/validateRequestSchema";
 import { getNotificationsSchema, getNotificationPreferencesSchema, markAsReadSchema, markAllAsReadSchema, updatePreferencesSchema, deleteNotificationSchema } from "../middleware/validation";
 
 const router: Router = express.Router();
 
-// Apply authentication to all notification routes
+// Apply authentication and rate limiting to all notification routes
 router.use(authenticateToken);
+router.use(rateLimitMiddleware({ max: 100, windowMs: 15 * 60 * 1000 })); // 100 requests per 15 minutes
 
 // Get notification history
 router.get("/", validateRequestSchema(getNotificationsSchema), notificationController.getNotifications);

@@ -63,11 +63,17 @@ export const useWebSocket = (): UseWebSocketReturn => {
       setConnectionStatus('connected');
       reconnectAttemptsRef.current = 0;
 
-      // Pass the track offset sequence downstream upon connection/reconnection
+      // Send JWT token with user registration for authenticated WebSocket connection
+      const token = localStorage.getItem('admin_token');
       newSocket.emit('register-user', {
-        userId: 'current-user', // Hook auth context mapping here
+        userId: 'current-user', // Fallback; server uses JWT-verified id
         lastOffset: lastOffsetRef.current,
+        token: token || undefined,
       });
+    });
+
+    newSocket.on('auth-error', (data: { message: string }) => {
+      console.error('WebSocket authentication failed:', data.message);
     });
 
     // Server replays historical lost state records
