@@ -11,6 +11,16 @@ import admin from "firebase-admin";
 import { Twilio } from "twilio";
 import webpush from "web-push";
 
+// HTML entity escaping to prevent XSS in email content
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 // Initialize services with environment variables
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
@@ -198,7 +208,7 @@ class NotificationService {
         to: userEmail,
         subject: notification.title,
         text: notification.message,
-        html: `<p>${notification.message}</p>`,
+        html: `<p>${escapeHtml(notification.message)}</p>`,
       });
       logger.info(
         `Email sent to ${userEmail.replace(/(.{3}).*(@.*)/, '$1***$2')} for notification ${notification._id}`,
